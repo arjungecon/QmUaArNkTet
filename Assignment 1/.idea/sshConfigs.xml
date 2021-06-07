@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SshConfigs">
+    <configs>
+      <sshConfig authType="PASSWORD" host="acropolis.uchicago.edu" id="0d192e93-2c83-48f0-b6cc-4313ea2a7f93" port="22" nameFormat="DESCRIPTIVE" username="arjung" />
+    </configs>
+  </component>
+</project>

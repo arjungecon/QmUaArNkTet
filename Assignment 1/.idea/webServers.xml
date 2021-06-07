@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="528f8b54-2272-474f-88ac-365b410a449a" name="acropolis" url="http://acropolis.uchicago.edu">
+        <fileTransfer rootFolder="/mnt/ide0/sftp/arjung" accessType="SFTP" host="acropolis.uchicago.edu" port="22" sshConfigId="0d192e93-2c83-48f0-b6cc-4313ea2a7f93" sshConfig="arjung@acropolis.uchicago.edu:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
