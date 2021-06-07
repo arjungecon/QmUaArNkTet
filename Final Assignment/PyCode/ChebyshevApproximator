@@ -1,4 +1,10 @@
 import numpy as np
+from numpy.polynomial import chebyshev as ch
+from itertools import product
+
+# Frequently used commands
+inv, ax, det = np.linalg.inv, np.newaxis, np.linalg.det
+cos, pi, arccos, log = np.cos, np.pi, np.arccos, np.log
 
 
 class ChebyshevApproximator:
@@ -12,15 +18,9 @@ class ChebyshevApproximator:
                  N: "The degree of Chebyshev approximation, integer",
                  M: 'The number of nodes in the approximation algorithm, integer',
                  bounds: 'Bounds of the rectangle for the approximation, np.array of dimension D x 2'):
+
         # Defining characteristics for the object used to perform Chebyshev approximation.
         self.f, self.D, self.N, self.M, self.bounds = f, D, N, M, bounds
-
-    def initializeChebyshevApproximator(self):
-        """
-            Initialization of the Chebyshev routine.
-        """
-
-        D, N, M = self.D, self.N, self.M
 
         # Computation of nodes along a single dimension.
         self.nodes1D = -cos(pi * (np.arange(1, M + 1) - 0.5) / M)
@@ -31,6 +31,8 @@ class ChebyshevApproximator:
         # Computing the tensor product basis polynomial matrix at each D-dim Chebyshev node.
         self.T = np.apply_along_axis(lambda x: self.calculateChebyshevPolynomials(val=x), 1, self.X)
 
+        self.coeffChebyshev = 0
+
     def calculateChebyshevPolynomials(self,
                                       val: 'Slice at which the polynomial is evaluated, of size D'):
         """
@@ -38,13 +40,13 @@ class ChebyshevApproximator:
         """
 
         # Initial value of the recursive Chebyshev polynomial.
-        ChebySlice = 1
+        cheby_slice = 1
 
         # Apply Kronecker product of computed Chebyshev polynomials over each dimension.
         for d in range(self.D):
-            ChebySlice = np.kron(cos(np.arange(0, self.N + 1)[ax, :] * arccos(val[d]))[ax, :], ChebySlice)
+            cheby_slice = np.kron(cos(np.arange(0, self.N + 1)[ax, :] * arccos(val[d]))[ax, :], cheby_slice)
 
-        return (np.squeeze(ChebySlice))
+        return np.squeeze(cheby_slice)
 
     def calculateChebyshevCoefficients(self):
         """
