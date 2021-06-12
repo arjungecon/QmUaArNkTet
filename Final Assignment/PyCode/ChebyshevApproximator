@@ -1,5 +1,4 @@
 import numpy as np
-from numpy.polynomial import chebyshev as ch
 from itertools import product
 
 # Frequently used commands
@@ -8,6 +7,7 @@ cos, pi, arccos, log = np.cos, np.pi, np.arccos, np.log
 
 
 class ChebyshevApproximator:
+
     """
         Class used to compute Chebyshev interpolations for multidimensional functions.
     """
