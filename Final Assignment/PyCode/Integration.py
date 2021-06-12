@@ -1,7 +1,7 @@
 import numpy as np
 from GaussHermiteQuadrature import GaussHermiteQuadrature
 from numpy.linalg import cholesky as chol
-from numpy.random import multivariate_normal as mvn
+from numpy.random import normal as normal
 
 # Frequently used commands
 inv, ax, det = np.linalg.inv, np.newaxis, np.linalg.det
@@ -23,12 +23,12 @@ class ExpectationMultivariateNormal:
         # Defining characteristics for the object used to run the integration procedures.
         self.D, self.f = Dim, Func
 
-        self.mu, self.var = np.reshape(NormalDist['mean'], (1, Dim)), NormalDist['Covariance']
+        self.mu, self.cov = np.reshape(NormalDist['Mean'], (1, Dim)), NormalDist['Cov']
 
         self.integral_GH, self.integral_MC = None, None
 
     def EvaluateGaussHermite(self,
-            Nodes: "The number of nodes required to run the Gauss-Hermite quadrature, integer"):
+                             Nodes: "The number of nodes required to run the Gauss-Hermite quadrature, integer"):
 
         """
             Evaluates the expectation operator with respect to the input multivariate normal distribution using
@@ -39,13 +39,13 @@ class ExpectationMultivariateNormal:
         GHQ = GaussHermiteQuadrature(Dim=self.D, Nodes=Nodes)
 
         # Obtain Cholesky decomposition of the covariance matrix.
-        cholCov = chol(self.var)
+        cholCov = chol(self.cov)
 
         # Adjust the Gauss-Hermite nodes using the mean of the multivariate normal.
-        GHQ.X = np.sqrt(2) * GHQ.X @ cholCov + self.mu
+        X_adj = np.sqrt(2) * GHQ.X @ cholCov.T + self.mu
 
         # Apply function to the adjusted Gauss-Hermite nodes.
-        Y = np.apply_along_axis(self.f, arr=GHQ.X, axis=1)
+        Y = np.apply_along_axis(self.f, arr=X_adj, axis=1)
 
         # Evaluate the integral using the corresponding weights for each adjusted node.
         self.integral_GH = 1/(pi ** (self.D/2)) * np.dot(Y, GHQ.W)
@@ -59,7 +59,11 @@ class ExpectationMultivariateNormal:
             Monte-Carlo simulations.
         """
 
-        X_draws = mvn(mean=self.mu, cov=self.cov, size=NumSim)
+        # Obtain Cholesky decomposition of the covariance matrix.
+        cholCov = chol(self.cov)
+
+        # Random draws from standard multivariate normal adjusted to the input distribution.
+        X_draws = normal(loc=0, scale=1, size=(NumSim, self.D)) @ cholCov.T + self.mu
 
         # Apply function to the adjusted Gauss-Hermite nodes.
         Y = np.apply_along_axis(self.f, arr=X_draws, axis=1)
@@ -69,5 +73,13 @@ class ExpectationMultivariateNormal:
 
         return self.integral_MC
 
-
-f = lambda x: np.sin(2 * x[0]) * x[1]**2 + x[2]
+#
+# f = lambda x: np.sin(2 * x[0]) * x[1]**2 + x[2]
+#
+# A = np.array([[1, 0.2, -0.5], [0.2, 1.6, 0.9], [-0.5, 0.9, 0.2]])
+#
+# int_eval = ExpectationMultivariateNormal(Func=f, Dim=3,
+#                                          NormalDist={'Mean': np.array([0.5, -1, 0]),
+#                                                      'Cov': A.T @ A})
+# int_eval.EvaluateGaussHermite(9)
+# int_eval.EvaluateMonteCarlo(10000000)
