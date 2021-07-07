@@ -1,5 +1,5 @@
 import numpy as np
-from  numpy.polynomial.hermite import hermgauss
+from numpy.polynomial.hermite import hermgauss
 import itertools
 
 # Frequently used commands
