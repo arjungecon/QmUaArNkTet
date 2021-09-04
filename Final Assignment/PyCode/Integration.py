@@ -16,23 +16,31 @@ class ExpectationMultivariateNormal:
     """
 
     def __init__(self,
-                 Func: "The (multivariate) function over which the expectation is computed, function",
-                 Dim: "The number of inputs in the function, integer",
-                 NormalDist: "Mean vector and covariance matrix of the multivariate normal distribution, dict"):
+                 func,
+                 dim: np.int32,
+                 normal_dist: dict):
+
+        """
+            func: The (multivariate) function over which the expectation is computed, function
+            dim: The number of inputs in the function, integer
+            normal_dist: Mean vector and covariance matrix of the multivariate normal distribution, dict
+        """
 
         # Defining characteristics for the object used to run the integration procedures.
-        self.D, self.f = Dim, Func
+        self.D, self.f = dim, func
 
-        self.mu, self.cov = np.reshape(NormalDist['Mean'], (1, Dim)), NormalDist['Cov']
+        self.mu, self.cov = np.reshape(normal_dist['Mean'], (1, dim)), normal_dist['Cov']
 
         self.integral_GH, self.integral_MC = None, None
 
     def EvaluateGaussHermite(self,
-                             Nodes: "The number of nodes required to run the Gauss-Hermite quadrature, integer"):
+                             Nodes: np.int16):
 
         """
             Evaluates the expectation operator with respect to the input multivariate normal distribution using
             Gauss-Hermite quadrature.
+
+            :param nodes: The number of nodes required to run the Gauss-Hermite quadrature, integer
         """
 
         # Initializing the Gauss-Hermite quadrature nodes and weights.
