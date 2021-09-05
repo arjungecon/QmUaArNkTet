@@ -21,9 +21,9 @@ class ExpectationMultivariateNormal:
                  normal_dist: dict):
 
         """
-            func: The (multivariate) function over which the expectation is computed, function
-            dim: The number of inputs in the function, integer
-            normal_dist: Mean vector and covariance matrix of the multivariate normal distribution, dict
+            :param func: The (multivariate) function over which the expectation is computed, function
+            :param dim: The number of inputs in the function, integer
+            :param normal_dist: Mean vector and covariance matrix of the multivariate normal distribution, dict
         """
 
         # Defining characteristics for the object used to run the integration procedures.
@@ -33,8 +33,8 @@ class ExpectationMultivariateNormal:
 
         self.integral_GH, self.integral_MC = None, None
 
-    def EvaluateGaussHermite(self,
-                             Nodes: np.int16):
+    def evaluate_gauss_hermite(self,
+                               nodes: np.int16):
 
         """
             Evaluates the expectation operator with respect to the input multivariate normal distribution using
@@ -44,40 +44,43 @@ class ExpectationMultivariateNormal:
         """
 
         # Initializing the Gauss-Hermite quadrature nodes and weights.
-        GHQ = GaussHermiteQuadrature(Dim=self.D, Nodes=Nodes)
+        ghq = GaussHermiteQuadrature(dim=self.D, nodes=nodes)
 
-        # Obtain Cholesky decomposition of the covariance matrix.
-        cholCov = chol(self.cov)
+        # Obtain Cholevsky decomposition of the covariance matrix.
+        chol_cov = chol(self.cov)
 
         # Adjust the Gauss-Hermite nodes using the mean of the multivariate normal.
-        X_adj = np.sqrt(2) * GHQ.X @ cholCov.T + self.mu
+        x_adj = np.sqrt(2) * ghq.X @ chol_cov.T + self.mu
 
         # Apply function to the adjusted Gauss-Hermite nodes.
-        Y = np.apply_along_axis(self.f, arr=X_adj, axis=1)
+        y = np.apply_along_axis(self.f, arr=x_adj, axis=1)
 
         # Evaluate the integral using the corresponding weights for each adjusted node.
-        self.integral_GH = 1/(pi ** (self.D/2)) * np.dot(Y, GHQ.W)
+        self.integral_GH = 1/(pi ** (self.D/2)) * np.dot(y, ghq.W)
 
         return self.integral_GH
 
-    def EvaluateMonteCarlo(self, NumSim: "Number of random draws required"):
+    def evaluate_montecarlo(self,
+                            num_sim: np.int64):
 
         """
             Evaluates the expectation operator with respect to the input multivariate normal distribution using
             Monte-Carlo simulations.
+
+            :param num_sim: "Number of random draws required"
         """
 
         # Obtain Cholesky decomposition of the covariance matrix.
-        cholCov = chol(self.cov)
+        chol_cov = chol(self.cov)
 
         # Random draws from standard multivariate normal adjusted to the input distribution.
-        X_draws = normal(loc=0, scale=1, size=(NumSim, self.D)) @ cholCov.T + self.mu
+        x_draws = normal(loc=0, scale=1, size=(num_sim, self.D)) @ chol_cov.T + self.mu
 
         # Apply function to the adjusted Gauss-Hermite nodes.
-        Y = np.apply_along_axis(self.f, arr=X_draws, axis=1)
+        y = np.apply_along_axis(self.f, arr=x_draws, axis=1)
 
         # Evaluate the integral by averaging across the function evaluated at the random draws.
-        self.integral_MC = np.mean(Y)
+        self.integral_MC = np.mean(y)
 
         return self.integral_MC
 
@@ -90,4 +93,4 @@ class ExpectationMultivariateNormal:
 #                                          NormalDist={'Mean': np.array([0.5, -1, 0]),
 #                                                      'Cov': A.T @ A})
 # int_eval.EvaluateGaussHermite(9)
-# int_eval.EvaluateMonteCarlo(10000000)
+# int_eval.evaluate_montecarlo(10000000)

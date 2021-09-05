@@ -15,20 +15,26 @@ class GaussHermiteQuadrature:
     """
 
     def __init__(self,
-                 Dim: "The dimension of the function, integer",
-                 Nodes: "The number of nodes required, integer"):
+                 dim: np.int32,
+                 nodes: np.int32):
+        
+        """
+            :param dim: The dimension of the function, integer
+            :param nodes: The number of nodes required, integer
+        
+        """
 
         # Defining characteristics for the object used to perform Gaussian-Hermite quadrature.
-        self.D, self.N = Dim, Nodes
-        self.X, self.W = np.zeros(Nodes), np.zeros(Nodes)
+        self.D, self.N = dim, nodes
+        self.X, self.W = np.zeros(nodes), np.zeros(nodes)
 
-        self.deriveGauHerWeights1D()
+        self.derive_ghw_1d()
 
         if self.D > 1:
 
-            self.deriveGauHerWeightsND()
+            self.derive_ghw_nd()
 
-    def deriveGauHerWeights1D(self):
+    def derive_ghw_1d(self):
 
         """
             Computes the node values and weights required.
@@ -36,13 +42,13 @@ class GaussHermiteQuadrature:
 
         self.X, self.W = hermgauss(deg=self.N)
 
-    def deriveGauHerWeightsND(self):
+    def derive_ghw_nd(self):
 
         """
             Computes a matrix of quadrature nodes and a vector of corresponding weights.
         """
 
-        X_d = np.array(list(itertools.product(*(self.X,) * self.D)))
-        W_d = np.prod(np.array(list(itertools.product(*(self.W,) * self.D))), 1)
+        x_d = np.array(list(itertools.product(*(self.X,) * self.D)))
+        w_d = np.prod(np.array(list(itertools.product(*(self.W,) * self.D))), 1)
 
-        self.X, self.W = X_d, W_d
+        self.X, self.W = x_d, w_d
