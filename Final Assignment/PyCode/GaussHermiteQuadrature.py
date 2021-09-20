@@ -52,3 +52,4 @@ class GaussHermiteQuadrature:
         w_d = np.prod(np.array(list(itertools.product(*(self.W,) * self.D))), 1)
 
         self.X, self.W = x_d, w_d
+

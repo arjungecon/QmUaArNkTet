@@ -53,10 +53,10 @@ class ExpectationMultivariateNormal:
         x_adj = np.sqrt(2) * ghq.X @ chol_cov.T + self.mu
 
         # Apply function to the adjusted Gauss-Hermite nodes.
-        y = np.apply_along_axis(self.f, arr=x_adj, axis=1)
+        y = np.apply_along_axis(self.f, arr=x_adj, axis=1).squeeze()
 
         # Evaluate the integral using the corresponding weights for each adjusted node.
-        self.integral_GH = 1/(pi ** (self.D/2)) * np.dot(y, ghq.W)
+        self.integral_GH = 1/(pi ** (self.D/2)) * (ghq.W.T @ y)
 
         return self.integral_GH
 
@@ -84,13 +84,13 @@ class ExpectationMultivariateNormal:
 
         return self.integral_MC
 
-#
-# f = lambda x: np.sin(2 * x[0]) * x[1]**2 + x[2]
-#
-# A = np.array([[1, 0.2, -0.5], [0.2, 1.6, 0.9], [-0.5, 0.9, 0.2]])
-#
-# int_eval = ExpectationMultivariateNormal(Func=f, Dim=3,
-#                                          NormalDist={'Mean': np.array([0.5, -1, 0]),
-#                                                      'Cov': A.T @ A})
-# int_eval.EvaluateGaussHermite(9)
-# int_eval.evaluate_montecarlo(10000000)
+
+f = lambda x: np.sin(2 * x[0]) * x[1]**2 + x[2]
+
+A = np.array([[1, 0.2, -0.5], [0.2, 1.6, 0.9], [-0.5, 0.9, 0.2]])
+
+int_eval = ExpectationMultivariateNormal(func=f, dim=3,
+                                         normal_dist={'Mean': np.array([0.5, -1, 0]),
+                                                      'Cov': A.T @ A})
+int_eval.evaluate_gauss_hermite(9)
+int_eval.evaluate_montecarlo(10000000)
