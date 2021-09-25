@@ -1,0 +1,217 @@
+\documentclass[11pt]{article}
+\usepackage[bookmarks]{hyperref}
+\usepackage[letterpaper, headheight=15pt, margin=0.8in]{geometry}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage[backend=biber, style=authoryear, citestyle=apa, maxcitenames=2, 
+ url=false, isbn=false, doi=false, natbib]{biblatex}
+\usepackage{csquotes}
+\usepackage{tabularx}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage{upgreek}
+\usepackage{pdflscape}
+\usepackage{subfiles}
+\usepackage{ctable}
+\usepackage{lmodern}
+\usepackage{framed}
+\usepackage{cancel}
+\usepackage{xfrac}
+\usepackage{graphicx}
+\usepackage{diagbox}
+\usepackage{amssymb,amsmath}
+\usepackage{mathtools}
+\usepackage{ragged2e}
+\usepackage{titlesec}
+\usepackage{setspace}
+\usepackage{amsthm}
+\usepackage{multirow}
+\usepackage{textgreek}
+\usepackage{tcolorbox}
+\usepackage{tablefootnote}
+\usepackage{afterpage}
+\usepackage{float}
+\usepackage{units}
+\usepackage{verbatim}
+\usepackage[math]{blindtext}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage{bm}
+\usepackage{xfrac}
+\usepackage{relsize}
+\usepackage{pdflscape}
+
+\renewbibmacro{in:}{}
+
+\renewcommand{\headrulewidth}{0pt}
+
+
+
+\newcommand{\indep}{\perp \!\!\! \perp}
+\newcommand{\Y}{\operatorname{Y}}
+\newcommand{\D}{\operatorname{D}}
+\newcommand{\U}{\operatorname{U}}
+\newcommand{\Z}{\operatorname{Z}}
+\newcommand{\E}{\mathbb{E}}
+\AtEveryBibitem{
+    \clearfield{urlyear}
+    \clearfield{urlmonth}
+}
+\newcommand{\cdf}{\operatorname{F}}
+\newcommand{\pdf}{\operatorname{f}}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\N}{\mathcal{N}}
+\makeatother
+
+
+\pagestyle{fancy}
+\fancyhf{}
+\linespread{1.25}
+
+\setlength{\abovedisplayskip}{0pt}
+\setlength{\belowdisplayskip}{0pt}
+
+\title{\LARGE \vspace{-1.5cm}\textbf{BUSN 37904 - Advanced Quantitative Marketing \\ Bayesian Learning Assignment}}
+
+\author{\Large Arjun Gopinath}
+
+\addbibresource{References-Arjun.bib}
+\AtEveryBibitem{
+    \clearfield{urlyear}
+    \clearfield{urlmonth}
+}
+
+\begin{document}
+
+\maketitle
+
+\noindent We use the approach outlined in \citet{erdem_decision-making_1996} and \citet{crawford_uncertainty_2005} to analyze and solve a learning model where consumers choose among $J$ experience goods and learn about their match quality associated with each product. The code is provided in Python and requires the activation of a custom Conda environment.
+
+\section{Theory}
+\subsection*{The Model}
+A consumer (typically indexed by $i$ but we ignore this notation) chooses among $J$ experience goods, $j=0$ denotes the no-purchase option. The realized quality of product $j$ is given by the sum of the intrinsic match value $\vartheta_{j}$ and an idiosyncratic noise term, $\nu_{j t}$, which are i.i.d. draws across $j$ and $t$.
+\begin{gather*}
+\xi_{j t} \; = \; \vartheta_{j}+\nu_{j t}, \qquad \nu_{j t} \, \sim \, \N\left(0, \sigma_{\nu}^{2}\right)
+\end{gather*}
+
+\noindent $\vartheta_{j}$ is the match value based on the product attributes and the consumer's idiosyncratic preferences over these attributes. Each consumer's match quality for product $j$ represents the match value based on the product attributes and the consumer's idiosyncratic preferences over these attributes.  
+\begin{gather*}
+    \vartheta_{j} \, \sim \, \N \left( \overline{\vartheta}_j, \tau^2_j \right)
+\end{gather*}
+
+\noindent However, consumers do not know their match quality. Instead, they have normal priors on the match values for each product, where at time $t$, the consumer believes that $\vartheta_j$ is distributed as $\pi_{jt}$ where
+\begin{gather*}
+\pi_{jt} \; \equiv \; \N\left(\mu_{j t}, \sigma_{jt}^{2}\right)
+\end{gather*}
+
+\noindent We assume that the priors are independent across the product space and across consumers. Furthermore, under rational expectations, the initial prior is set such that $\pi_{j 0} \equiv \N\left(\overline{\vartheta}_{j}, \tau^{2}\right)$ wherein consumers begin by assuming the mean of their matching value is the average matching value.\\
+
+\noindent After a purchase (which coincides with consumption) of product $j$ at time $t$, the consumer observes the signal $\xi_{j t}$ and updates their prior in a rational, Bayesian fashion. Given that the noisy shocks to the realized quality of the product are zero-mean, the expected value of the signal coincides with the expected value of the match value associated with attribute $j$ under the information set $\boldsymbol{x}_{t-1}$.
+\begin{gather*}
+    \E\left[\xi_{jt} \mid \boldsymbol{x}_{t-1} \right] \; = \; \E\left[\vartheta_{j} \mid \boldsymbol{x}_{t-1} \right] \; = \; \mu_{j,t-1}
+\end{gather*}
+
+\noindent Let $C_{jt} = 1$ if the consumer chooses product $j$ and $0$ otherwise. Using standard Bayesian updating results given normality assumptions, the mean of the prior is updated from $t-1$ to $t$ as shown below:
+\begin{gather*}
+    \mu_{jt} \; := \;   \mu_{j,t-1}+ C_{jt} \lambda_{j,t} \left( \xi_{jt} - \mu_{j,t-1}  \right) \\
+\text{with Kalman gain} \;\; 
+\lambda_{jt} \; = \; \frac{\sigma^2_{j,t-1}}{\sigma^2_{j,t-1} + \sigma^2_{\nu}}
+\end{gather*}
+
+\noindent The variance of the prior is updated deterministically as it does not depend on the random draw of the signal $\xi_{j,t}$.
+\begin{gather*}
+\sigma^2_{j,t} \; = \; {\left(\frac{1}{\sigma^2_{j,t-1}} + \frac{C_{j,t}}{\sigma^2_{\nu}} \right)}^{-1}
+\end{gather*}
+\noindent Since there is no correlated learning, i.e. the consumption of product $j$ gives no new information about products $k \neq j$, the period-$t$ priors for the remaining $J - 1$ products remain unchanged when product $j$ is consumed in period $t$.\\
+
+\noindent The realized utility (net of the latent utility draw $\epsilon_{j t}$) conditional on the purchase of product $j$ with price at time $t$ denoted by $p_{j t}$ is given by
+\begin{gather*}
+\mathfrak{u}_{j t} \; = \; \gamma-\exp \left(-\rho \xi_{j t}\right)-\alpha p_{j t}
+\end{gather*}
+\noindent where $\rho > 0$ captures the consumer's risk aversion. $\gamma$ imposes restrictions on the market shares. Assume that the latent utility draws are Type I Extreme Value, i.i.d., and centered at 0. The price vectors $\mathbf{p}_{t}$ are i.i.d. draws from a discrete distribution with a support of $\left\{\boldsymbol{\mathfrak{p}}_{1}, \ldots, \boldsymbol{\mathfrak{p}}_{K}\right\}$ with probability mass function given by $\omega_{k}=\operatorname{Pr}\left\{\boldsymbol{p}_{t}=\boldsymbol{\mathfrak{p}}_{k}\right\}$.\\
+
+\noindent The state vector is given by $\boldsymbol{x}_{t}=\left(\boldsymbol{p}_{t}, \boldsymbol{\pi}_{t}\right)=\left(p_{1 t}, \ldots, p_{J t}, \mu_{1 t}, \sigma_{1 t}^{2}, \ldots, \mu_{J t}, \sigma_{J t}^{2}\right)$. The expected utility conditional on the purchase of $j$ given state $\boldsymbol{x}_t$ (which includes the consumer's prior belief about the match value of product $j$) is
+\begin{align*}
+u_{j}\left(\boldsymbol{x}_{t}\right) \; = \; \E\left[ \mathfrak{u}_{jt} \middle| \boldsymbol{x}_{t} \right] \; & = \;  \E\left[\gamma-\exp \left(-\rho \xi_{j t}\right)-\alpha p_{j t}\, \middle|\, \boldsymbol{x}_{t}\right]\\
+& = \; \gamma - \exp \left\{ -\rho \mu_{jt} + \frac{\rho^2}{2} \left( \sigma^2_{jt} + \sigma^2_{\nu}\right) \right\} - \alpha \mathfrak{p}_{kj} 
+\end{align*}
+This uses the fact that from the consumer's perspective, $\xi_{jt} \sim \N(\mu_{jt}, \sigma^2_{jt} + \sigma^2_\nu)$. We normalize the utility from the outside option such that $u_0 \left( \boldsymbol{x}_t \right) = 0$. 
+
+\subsection*{Characterizing the Bellman Equation}
+Consumers are forward-looking and discount the future using a discount factor $\beta>0 .$ Optimal choices are characterized by the choice-specific value functions $v_{j}(\boldsymbol{x})$, such that consumers choose product $j$ at time $t$ ($C_{jt} = 1$) if and only if 
+\begin{gather*}
+    v_{j}\left(\boldsymbol{x}_{t}\right)+\epsilon_{jt} \; \geq \;  v_{k}\left(\boldsymbol{x}_{t}\right)+\epsilon_{k t} \quad \forall \; k \neq j
+\end{gather*}
+Due to the Bayesian learning component, the consumer's choice problem is dynamic with two key considerations. The consumer's expected consumption utility in the current period and their learning process drive their intertemporal consumption choices. The Bellman equation facing a consumer at time $t$ with state variable $\boldsymbol{x}_t$ is given by
+\begin{gather*}
+    v\left(\boldsymbol{x}_{t}, \boldsymbol{\varepsilon}_{t}\right) \; = \; \max _{j}  \Big\{ \E_{{\boldsymbol{\pi}_{t}}}\left[\gamma-\exp \left(\rho \xi_{j t}\right)-\alpha p_{j t}+\varepsilon_{j t} \right]+ \beta \, \E_{\boldsymbol{x}_{t+1}, \varepsilon_{t+1}} \left[ v \left(\boldsymbol{x}_{t+1}, \boldsymbol{\varepsilon}_{t+1}\right)  \right] \Big\}
+\end{gather*}
+We can take expectations with respect to both $\boldsymbol{p}_t$ and $\boldsymbol{\varepsilon}_t$ in the above Bellman equation as they are both i.i.d. across $t$, and arrive at choice-specific value functions $v_j$ in the expression on the RHS and the expected value function given beliefs $\boldsymbol{\pi}_t$ on the LHS.
+\begin{align*}
+\overline{v}(\boldsymbol{\pi}_t) \; &= \; \sum_{k=1}^K \omega_k \, \int \max_j  \Big\{ \E_{{\boldsymbol{\pi}_{t}}}\left[\gamma-\exp \left(\rho \xi_{j t}\right)-\alpha p_{kj}+\varepsilon_{j t} \right]+ \beta \, \E_{\boldsymbol{x}_{t+1}, \varepsilon_{t+1}} \left[ v \left(\boldsymbol{x}_{t+1}, \boldsymbol{\varepsilon}_{t+1}\right)  \right] \Big\} \; g(\boldsymbol\varepsilon) \,\operatorname{d}\boldsymbol\varepsilon \\
+& = \;  \sum_{k=1}^K \omega_k \, \int \max_j  \left\{ v_j(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}_t}) +  \varepsilon_{j t} \right\} \; g(\boldsymbol\varepsilon) \,\operatorname{d}\boldsymbol\varepsilon
+\end{align*}
+We assume that the price vector is i.i.d. across time periods as it reduces the state space of our model. If we do not assume prices are i.i.d., the state space gets very large and the problem becomes quite computationally difficult. For instance, we will need to include lagged prices as a state variable as the probabilities $\{\omega_{k,t}\}$ would now be a function of $\boldsymbol{p}_{t-1}$. This assumption is economically sound as we anticipate the consumer to fully account for prices in the utility function.\\
+
+\noindent Given that the idiosyncratic shocks are i.i.d. Gumbel distributed, we can simplify the expression for the expected value function in terms of the choice-specific value functions.
+\begin{align*}
+    \overline{v}(\boldsymbol{\pi}_t) \; & = \; \gamma + \mu + \sum_{k=1}^K \omega_k \, \log  \left( \sum_{j = 0}^J \exp \left\{ v_j(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}_t}) \right\} \right) \\
+    & = \;  \sum_{k=1}^K \omega_k \, \log \left( \sum_{j = 0}^J \exp \left\{ v_j(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}_t})  \right\} \right) 
+\end{align*}
+
+\noindent 
+We set the location parameter of the Gumbel distribution to the negative of the Euler-Mascharoni constant so that the latent utility draws are centered around zero. Note that the choice-specific value function is now given by
+\begin{gather*}
+v_j(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}_t}) \; = \; u_j(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}_t}) + \int_{\boldsymbol{\pi}}\overline{v}(\boldsymbol{\pi}_{t+1}) \, \text{f}\left( \boldsymbol{\pi}_{t+1} \mid \boldsymbol{\pi}_{t}, j\right) \operatorname{d}\boldsymbol{\pi}_{t+1}
+\end{gather*}
+
+\noindent where $\text{f}\left( \boldsymbol{\pi}_{t+1} \mid \boldsymbol{\pi}_{t}, j\right)$ denotes the state transition probability when the consumer chooses product $j$ and updates their beliefs about the match value. \\
+
+\noindent Note that the set of prior parameters $\boldsymbol{\pi}$ has $2 J$ components as we assume there is no correlated learning and as such we can characterize the entire prior distribution using the first two moments associated with each product's perceived match quality. However, only one element of all $2J$ elements evolves stochastically, which is the updated prior mean for the product chosen. The prior variance associated with that product decreases deterministically, and the prior moments of the remaining $J -1$ products remain unchanged. \\
+
+\noindent We can also characterize the conditional choice probabilities as a function of the state $(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}_t})$.
+$$
+    \Pr \left\{\text{Consumer chooses } j \, \middle| \, (\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}_t}) \right\} \; = \; \frac{\exp \left\{ v_j(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}_t})  \right\}}{\displaystyle \sum_{\ell = 0}^J \exp \left\{ v_\ell(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}_t})  \right\}}
+$$
+
+\subsection*{Numerical Approximations}
+We make use of Chebyshev interpolation and Gauss-Hermite quadrature to solve the Bellman equation in this assignment. First, given that the state variable $\boldsymbol{\pi}$ consists of $J$ means and $J$ variances (no correlation terms as we are ruling out correlated learning), we have $2J$ state variables. This implies that we can represent the expected value function through a system of $2J$-tensor product of Chebyshev polynomials with a given number of Chebyshev nodes and a specified degree of the polynomials used. If we use $K$ nodes
+\begin{gather*}
+    \overline{v}(\boldsymbol{\pi}) \; \equiv \; \sum_{k = 1}^K \theta_k \, {T}_k(\boldsymbol{\pi}) \; = \; \boldsymbol{T}(\boldsymbol{\pi}) \boldsymbol{\theta}
+\end{gather*}
+
+\noindent Furthermore, since $\text{f}\left( \boldsymbol{\pi}_{t+1} \mid \boldsymbol{\pi}_{t}, j\right)$ corresponds to the p.d.f. of a multivariate normal distribution, we can use the Gauss-Hermite quadrature to evaluate the integral. This implies that the integral used to characterize the choice-specific value function can be rewritten as shown, assuming that we use $Q$ quadrature nodes.
+\begin{align*}
+\int_{\boldsymbol{\pi}}\overline{v}(\boldsymbol{\pi}_{t+1}) \, \text{f}\left( \boldsymbol{\pi}_{t+1} \mid \boldsymbol{\pi}_{t}, j\right) \operatorname{d}\boldsymbol{\pi}_{t+1} \; & \approx \; \int_{\boldsymbol{\pi}} \sum_{k = 1}^K \theta_k \, T_k(\boldsymbol{\pi_{t+1}})\, \text{f}\left( \boldsymbol{\pi}_{t+1} \mid \boldsymbol{\pi}_{t}, j\right) \operatorname{d}\boldsymbol{\pi}_{t+1} \\
+& = \; \sum_{k = 1}^K \theta_k \int_{\boldsymbol{\pi}} T_k(\boldsymbol{\pi_{t+1}})\, \text{f}\left( \boldsymbol{\pi}_{t+1} \mid \boldsymbol{\pi}_{t}, j\right) \operatorname{d}\boldsymbol{\pi}_{t+1}  \\
+& \equiv \; \sum_{k = 1}^K \theta_k \,  E_k (\boldsymbol{\pi_t}, j) \\
+& \approx \;  \sum_{k = 1}^K \theta_k \sum_{q = 1}^Q  \psi_{q}\left(  \boldsymbol{\pi}_t, j\right) \, T_k (\boldsymbol{\pi}_{t+1, q} )
+\end{align*}
+
+\noindent where we see that we now evaluate the expectation over the Chebyshev polynomials using Gauss-Hermite quadrature. \\
+
+\noindent The numerical approximations outlined above will expedite the value function iteration. At iteration $n$, the Chebyshev approximation coefficients $\boldsymbol{\theta}^{(n)}$ represent the optimal approximation of the expected value function $\overline{v}$. We can then evaluate each choice-specific value function as shown:
+\begin{align*}
+	v^{(n)}_j(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}_t}) \; \approx \; u_j(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}_t}) + \beta \sum_{k = 1}^K \theta_k^{(n)} \sum_{q = 1}^Q  \psi_{q}^{(j)} \, T_k (\boldsymbol{\pi}_{t+1, q} \, ; \, j)
+\end{align*}
+
+\noindent These can be used to update the expected value function in the subsequent iteration
+$$
+\overline{v}^{(n+1)}(\boldsymbol{\pi}) \; \longleftarrow \; \sum_{k=1}^K \omega_k \, \log \left(\sum_j \exp   v_j^{(n)}(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}})   \right)
+$$
+We obtain the updated Chebyshev coefficient vector $\boldsymbol{\theta}^{(n+1)}$ based on the regression
+$$
+\boldsymbol{\theta}^{(n+1)} \; = \; \left(\boldsymbol{T}(\pi)' \,\boldsymbol{T}(\pi)\right)^{-1} \boldsymbol{T}(\pi)'\, \overline{v}^{(n+1)}(\boldsymbol{\pi})
+$$
+The updated expected value function $\overline{v}^{(n+1)}$ is represented as $v^{(n+1)}(\boldsymbol{\pi}) \equiv \boldsymbol{T}(\boldsymbol{\pi}) \boldsymbol{\theta}^{(n+1)}$.
+
+\section{Computational Implementation}
+
+
+
+\newpage
+\printbibliography
+
+\end{document}

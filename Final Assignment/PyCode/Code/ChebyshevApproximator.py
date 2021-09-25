@@ -1,5 +1,6 @@
 import numpy as np
 from itertools import product
+from numba import jit
 
 # Frequently used commands
 inv, ax, det = np.linalg.inv, np.newaxis, np.linalg.det

@@ -92,15 +92,13 @@ $$
 $$
 Furthermore, since $\text{f}\left( \boldsymbol{\pi}_{t+1} \mid \boldsymbol{\pi}_{t}, j\right)$ corresponds to the p.d.f. of a multivariate normal distribution, we can use the Gauss-Hermite quadrature to evaluate the integral.
 
-<!--However, the consumer only chooses one product in each time period and the beliefs corresponding to the match value of that product are updated. This implies that only one pair of $\mu_{j,t+1}$ and $\sigma_{j,t+1}$ are updated at any given time, and therefore the expectation needs to be evaluated-->
-
 This implies that the integral used to characterize the choice-specific value function can be rewritten as shown, assuming that we use $Q$ quadrature nodes.
 $$
 \begin{align*}
 \int_{\boldsymbol{\pi}}\overline{v}(\boldsymbol{\pi}_{t+1}) \, \text{f}\left( \boldsymbol{\pi}_{t+1} \mid \boldsymbol{\pi}_{t}, j\right) \operatorname{d}\boldsymbol{\pi}_{t+1} \; & \approx \; \int_{\boldsymbol{\pi}} \sum_{k = 1}^K \theta_k \, T_k(\boldsymbol{\pi_{t+1}})\, \text{f}\left( \boldsymbol{\pi}_{t+1} \mid \boldsymbol{\pi}_{t}, j\right) \operatorname{d}\boldsymbol{\pi}_{t+1} \\
 & = \; \sum_{k = 1}^K \theta_k \int_{\boldsymbol{\pi}} T_k(\boldsymbol{\pi_{t+1}})\, \text{f}\left( \boldsymbol{\pi}_{t+1} \mid \boldsymbol{\pi}_{t}, j\right) \operatorname{d}\boldsymbol{\pi}_{t+1}  \\
 & \equiv \; \sum_{k = 1}^K \theta_k \,  E_k (\boldsymbol{\pi_t}, j) \\
-& \approx \;  \sum_{k = 1}^K \theta_k \sum_{q = 1}^Q  \psi_{q}^{(j)} \, T_k (\boldsymbol{\pi}_{t+1, q})
+& \approx \;  \sum_{k = 1}^K \theta_k \sum_{q = 1}^Q  \psi_{q}\left(  \boldsymbol{\pi}_t, j\right) \, T_k (\boldsymbol{\pi}_{t+1, q} )
 \end{align*}
 $$
 where we see that we now evaluate the expectation over the Chebyshev polynomials using Gauss-Hermite quadrature. 
@@ -122,14 +120,6 @@ $$
 \boldsymbol{\theta}^{(n+1)} \; = \; \left(\boldsymbol{T}(\pi)' \,\boldsymbol{T}(\pi)\right)^{-1} \boldsymbol{T}(\pi)'\, \overline{v}^{(n+1)}(\mathbf{x})
 $$
 The updated value function $v^{(n+1)}$ is then given by $v^{(n+1)}(\boldsymbol{x})=\sum_{k} \theta_{k}^{(n+1)} T_{k}(\boldsymbol{x})$.
-
-
-
-
-
-​	
-
-
 
 
 
