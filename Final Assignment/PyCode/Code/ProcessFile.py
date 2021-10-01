@@ -37,11 +37,11 @@ def open_compressed_pickle(pkl_file):
     :return: Pandas dataframe
     """
 
-    os.chdir("./Pickles")
+    os.chdir("../Pickles")
     data = bz2.BZ2File(pkl_file + '.pbz2', 'rb')
     data = cPickle.load(data)
 
-    os.chdir('../')
+    os.chdir('../Code')
 
     return data
 

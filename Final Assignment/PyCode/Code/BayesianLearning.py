@@ -5,6 +5,7 @@ from numpy.linalg import norm as norm
 from numpy.linalg import cholesky as chol
 from numpy.random import default_rng
 import pandas as pd
+import time as time_
 
 from ChebyshevApproximator import ChebyshevApproximator
 from GaussHermiteQuadrature import GaussHermiteQuadrature
@@ -220,7 +221,7 @@ class BayesianLearning:
         ghq_nodes_signal = np.sqrt(2) * self.GHQ.X @ chol(
             prior_var[:] + self.nu * np.eye(self.J)).T + prior_mean[:]
 
-        # Construct Chebyshev object.
+        # Construct Chebyshev object over the GHQ nodes.
         chebyshev_approx = self.generate_chebyshev_beliefs(
             mean=prior_mean[:], var=prior_var[:])
 
@@ -288,7 +289,7 @@ class BayesianLearning:
 
         return utility + evf[:, ax]
 
-    def get_evf(self, prior_mean, prior_var, init_theta):
+    def get_expected_vf(self, prior_mean, prior_var, init_theta):
 
         """
             Solves for the Expected Value Function as a fixed point solution to the
@@ -318,15 +319,22 @@ class BayesianLearning:
 
             # Compute the choice-specific value functions for all products and prices
             # with each Chebyshev node used as the prior mean vector for the customer's beliefs.
+
             print('Iteration {}: Computing the CSVF'.format(ite_count + 1))
+            start = time_.time()
             csvf = par_aaa(
                 func1d=lambda x: self.get_choice_specific_vf(
                     prior_mean=x[0:2], prior_var=np.diag(x[2:]), evf_theta=ite_theta),
                 axis=1, arr=chebyshev_nodes
+                # Matrix of size M^(2J) x (J + 1) x L
             )
-            # Matrix of size M^(2J) x (J + 1) x L
+            end = time_.time()
 
-            # Calculating the EVF using the multinomial logit result: vector of size M^J
+            hours, rem = divmod(end - start, 3600)
+            minutes, seconds = divmod(rem, 60)
+            print("Time taken: {:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds))
+
+            # Calculating the EVF using the multinomial logit result: vector of size M^(2J)
             evf = np.einsum('j, ij -> i', self.price_prob, logsumexp(csvf, axis=1))
 
             # Computing the new Chebyshev coefficients to represent the EVF.
@@ -367,6 +375,7 @@ class BayesianLearning:
         ccp_matrix = np.zeros([self.max_time, self.J + 1])
         choice_list = np.zeros(self.max_time)
         mean_list, var_list = np.zeros([self.max_time, self.J]), np.zeros([self.max_time, self.J])
+        switch_cost = np.zeros(self.max_time)
 
         for time in range(self.max_time):
 
@@ -376,9 +385,11 @@ class BayesianLearning:
 
             # Obtain the Expected Value Function as a Chebyshev coefficient vector.
             print('time {} : Computing the EVF'.format(time))
-            theta_t = self.get_evf(prior_mean=post_mean,
-                                   prior_var=post_var,
-                                   init_theta=theta_prev)
+            theta_t = self.get_expected_vf(
+                prior_mean=post_mean,
+                prior_var=post_var,
+                init_theta=theta_prev
+            )
 
             # Compute the Choice Specific Value Functions with the EVF solution from the Bellman and
             # utility matrix.
@@ -398,7 +409,7 @@ class BayesianLearning:
 
             # Realized match quality signal seen by the consumer.
             print('time {} : Drawing match quality signal'.format(time))
-            signal = match_quality + self.rng.normal(size=self.J) * np.sqrt(self.nu)
+            signal = match_quality + chol(self.nu * np.eye(self.J) + self.mq_var) @ self.rng.normal(size=self.J)
 
             if product != 0:    # If a product is chosen, beliefs are updated.
 
@@ -414,12 +425,24 @@ class BayesianLearning:
 
             mean_list[time, :], var_list[time, :] = post_mean, np.diag(post_var)
 
+            csvf_0 = self.get_choice_specific_vf(
+                prior_mean=self.prior_mean[:],
+                prior_var=self.prior_var[:],
+                evf_theta=theta_t
+            )   # CSVF with initial priors to compute the switching costs.
+
+            # Compute switching costs using CSVF formula from Hartmann + Viard (2008).
+            switch_cost[time] = \
+                (csvf_t[product, px] - csvf_t[choice_list[time - 1], px]) - \
+                (csvf_0[product, px] - csvf_0[choice_list[time - 1], px])
+
             theta_prev = theta_t.copy()
 
         return {
             'Price': price_trajectory,
             'Product': choice_list,
             'CCP': ccp_matrix,
+            'Switching Cost': switch_cost,
             'Post. Mean': mean_list,
             'Post. Var': var_list
         }
