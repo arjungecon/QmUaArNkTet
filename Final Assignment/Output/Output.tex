@@ -8,13 +8,14 @@
 \usepackage[backend=biber, style=authoryear, citestyle=apa, maxcitenames=2, 
  url=false, isbn=false, doi=false, natbib]{biblatex}
 \usepackage{csquotes}
+\usepackage{tikz}
+\usepackage{ctable}
 \usepackage{tabularx}
 \usepackage{verbatim}
 \usepackage{enumitem}
 \usepackage{upgreek}
 \usepackage{pdflscape}
 \usepackage{subfiles}
-\usepackage{ctable}
 \usepackage{lmodern}
 \usepackage{framed}
 \usepackage{cancel}
@@ -42,6 +43,10 @@
 \usepackage{xfrac}
 \usepackage{relsize}
 \usepackage{pdflscape}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{algpseudocodex}
+\usepackage{listings}
 
 \renewbibmacro{in:}{}
 
@@ -76,7 +81,7 @@
 \title{\LARGE \vspace{-1.5cm}\textbf{BUSN 37904 - Advanced Quantitative Marketing \\ Bayesian Learning Assignment}}
 
 \author{\Large Arjun Gopinath}
-
+\date{}
 \addbibresource{References-Arjun.bib}
 \AtEveryBibitem{
     \clearfield{urlyear}
@@ -114,16 +119,16 @@ A consumer (typically indexed by $i$ but we ignore this notation) chooses among 
 \end{gather*}
 
 \noindent Let $C_{jt} = 1$ if the consumer chooses product $j$ and $0$ otherwise. Using standard Bayesian updating results given normality assumptions, the mean of the prior is updated from $t-1$ to $t$ as shown below:
-\begin{gather*}
-    \mu_{jt} \; := \;   \mu_{j,t-1}+ C_{jt} \lambda_{j,t} \left( \xi_{jt} - \mu_{j,t-1}  \right) \\
+\begin{gather}
+    \mu_{jt} \; := \;   \mu_{j,t-1}+ C_{jt} \lambda_{j,t} \left( \xi_{jt} - \mu_{j,t-1}  \right)  \label{eq:bayes-mean} \\
 \text{with Kalman gain} \;\; 
-\lambda_{jt} \; = \; \frac{\sigma^2_{j,t-1}}{\sigma^2_{j,t-1} + \sigma^2_{\nu}}
-\end{gather*}
+\lambda_{jt} \; = \; \frac{\sigma^2_{j,t-1}}{\sigma^2_{j,t-1} + \sigma^2_{\nu}} \notag
+\end{gather}
 
 \noindent The variance of the prior is updated deterministically as it does not depend on the random draw of the signal $\xi_{j,t}$.
-\begin{gather*}
-\sigma^2_{j,t} \; = \; {\left(\frac{1}{\sigma^2_{j,t-1}} + \frac{C_{j,t}}{\sigma^2_{\nu}} \right)}^{-1}
-\end{gather*}
+\begin{gather}
+    \sigma^2_{j,t} \; = \; {\left(\frac{1}{\sigma^2_{j,t-1}} + \frac{C_{j,t}}{\sigma^2_{\nu}} \right)}^{-1} \label{eq:bayes-var}
+\end{gather}
 \noindent Since there is no correlated learning, i.e. the consumption of product $j$ gives no new information about products $k \neq j$, the period-$t$ priors for the remaining $J - 1$ products remain unchanged when product $j$ is consumed in period $t$.\\
 
 \noindent The realized utility (net of the latent utility draw $\epsilon_{j t}$) conditional on the purchase of product $j$ with price at time $t$ denoted by $p_{j t}$ is given by
@@ -133,10 +138,10 @@ A consumer (typically indexed by $i$ but we ignore this notation) chooses among 
 \noindent where $\rho > 0$ captures the consumer's risk aversion. $\gamma$ imposes restrictions on the market shares. Assume that the latent utility draws are Type I Extreme Value, i.i.d., and centered at 0. The price vectors $\mathbf{p}_{t}$ are i.i.d. draws from a discrete distribution with a support of $\left\{\boldsymbol{\mathfrak{p}}_{1}, \ldots, \boldsymbol{\mathfrak{p}}_{K}\right\}$ with probability mass function given by $\omega_{k}=\operatorname{Pr}\left\{\boldsymbol{p}_{t}=\boldsymbol{\mathfrak{p}}_{k}\right\}$.\\
 
 \noindent The state vector is given by $\boldsymbol{x}_{t}=\left(\boldsymbol{p}_{t}, \boldsymbol{\pi}_{t}\right)=\left(p_{1 t}, \ldots, p_{J t}, \mu_{1 t}, \sigma_{1 t}^{2}, \ldots, \mu_{J t}, \sigma_{J t}^{2}\right)$. The expected utility conditional on the purchase of $j$ given state $\boldsymbol{x}_t$ (which includes the consumer's prior belief about the match value of product $j$) is
-\begin{align*}
-u_{j}\left(\boldsymbol{x}_{t}\right) \; = \; \E\left[ \mathfrak{u}_{jt} \middle| \boldsymbol{x}_{t} \right] \; & = \;  \E\left[\gamma-\exp \left(-\rho \xi_{j t}\right)-\alpha p_{j t}\, \middle|\, \boldsymbol{x}_{t}\right]\\
+\begin{align}
+u_{j}\left(\boldsymbol{x}_{t}\right) \; = \; \E\left[ \mathfrak{u}_{jt} \middle| \boldsymbol{x}_{t} \right] \; & = \;  \E\left[\gamma-\exp \left(-\rho \xi_{j t}\right)-\alpha p_{j t}\, \middle|\, \boldsymbol{x}_{t}\right] \notag \\
 & = \; \gamma - \exp \left\{ -\rho \mu_{jt} + \frac{\rho^2}{2} \left( \sigma^2_{jt} + \sigma^2_{\nu}\right) \right\} - \alpha \mathfrak{p}_{kj} 
-\end{align*}
+\end{align}
 This uses the fact that from the consumer's perspective, $\xi_{jt} \sim \N(\mu_{jt}, \sigma^2_{jt} + \sigma^2_\nu)$. We normalize the utility from the outside option such that $u_0 \left( \boldsymbol{x}_t \right) = 0$. 
 
 \subsection*{Characterizing the Bellman Equation}
@@ -149,32 +154,43 @@ Due to the Bayesian learning component, the consumer's choice problem is dynamic
     v\left(\boldsymbol{x}_{t}, \boldsymbol{\varepsilon}_{t}\right) \; = \; \max _{j}  \Big\{ \E_{{\boldsymbol{\pi}_{t}}}\left[\gamma-\exp \left(\rho \xi_{j t}\right)-\alpha p_{j t}+\varepsilon_{j t} \right]+ \beta \, \E_{\boldsymbol{x}_{t+1}, \varepsilon_{t+1}} \left[ v \left(\boldsymbol{x}_{t+1}, \boldsymbol{\varepsilon}_{t+1}\right)  \right] \Big\}
 \end{gather*}
 We can take expectations with respect to both $\boldsymbol{p}_t$ and $\boldsymbol{\varepsilon}_t$ in the above Bellman equation as they are both i.i.d. across $t$, and arrive at choice-specific value functions $v_j$ in the expression on the RHS and the expected value function given beliefs $\boldsymbol{\pi}_t$ on the LHS.
-\begin{align*}
+\begin{align}
 \overline{v}(\boldsymbol{\pi}_t) \; &= \; \sum_{k=1}^K \omega_k \, \int \max_j  \Big\{ \E_{{\boldsymbol{\pi}_{t}}}\left[\gamma-\exp \left(\rho \xi_{j t}\right)-\alpha p_{kj}+\varepsilon_{j t} \right]+ \beta \, \E_{\boldsymbol{x}_{t+1}, \varepsilon_{t+1}} \left[ v \left(\boldsymbol{x}_{t+1}, \boldsymbol{\varepsilon}_{t+1}\right)  \right] \Big\} \; g(\boldsymbol\varepsilon) \,\operatorname{d}\boldsymbol\varepsilon \\
-& = \;  \sum_{k=1}^K \omega_k \, \int \max_j  \left\{ v_j(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}_t}) +  \varepsilon_{j t} \right\} \; g(\boldsymbol\varepsilon) \,\operatorname{d}\boldsymbol\varepsilon
-\end{align*}
+& = \;  \sum_{k=1}^K \omega_k \, \int \max_j  \left\{ v_j(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}_t}) +  \varepsilon_{j t} \right\} \; g(\boldsymbol\varepsilon) \,\operatorname{d} \label{eq:BE-1}\boldsymbol\varepsilon
+\end{align}
 We assume that the price vector is i.i.d. across time periods as it reduces the state space of our model. If we do not assume prices are i.i.d., the state space gets very large and the problem becomes quite computationally difficult. For instance, we will need to include lagged prices as a state variable as the probabilities $\{\omega_{k,t}\}$ would now be a function of $\boldsymbol{p}_{t-1}$. This assumption is economically sound as we anticipate the consumer to fully account for prices in the utility function.\\
 
 \noindent Given that the idiosyncratic shocks are i.i.d. Gumbel distributed, we can simplify the expression for the expected value function in terms of the choice-specific value functions.
-\begin{align*}
-    \overline{v}(\boldsymbol{\pi}_t) \; & = \; \gamma + \mu + \sum_{k=1}^K \omega_k \, \log  \left( \sum_{j = 0}^J \exp \left\{ v_j(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}_t}) \right\} \right) \\
+\begin{align}
+    \overline{v}(\boldsymbol{\pi}_t) \; & = \; \gamma + \mu + \sum_{k=1}^K \omega_k \, \log  \left( \sum_{j = 0}^J \exp \left\{ v_j(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}_t}) \right\} \right) \notag \\
     & = \;  \sum_{k=1}^K \omega_k \, \log \left( \sum_{j = 0}^J \exp \left\{ v_j(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}_t})  \right\} \right) 
-\end{align*}
+\end{align}
 
 \noindent 
 We set the location parameter of the Gumbel distribution to the negative of the Euler-Mascharoni constant so that the latent utility draws are centered around zero. Note that the choice-specific value function is now given by
-\begin{gather*}
+\begin{gather}
 v_j(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}_t}) \; = \; u_j(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}_t}) + \int_{\boldsymbol{\pi}}\overline{v}(\boldsymbol{\pi}_{t+1}) \, \text{f}\left( \boldsymbol{\pi}_{t+1} \mid \boldsymbol{\pi}_{t}, j\right) \operatorname{d}\boldsymbol{\pi}_{t+1}
-\end{gather*}
+\end{gather}
 
 \noindent where $\text{f}\left( \boldsymbol{\pi}_{t+1} \mid \boldsymbol{\pi}_{t}, j\right)$ denotes the state transition probability when the consumer chooses product $j$ and updates their beliefs about the match value. \\
 
+\noindent This implies that the Bellman equation that characterizes the expcted value function $\overline{v}(\cdot)$ is given by 
+\begin{gather}
+    \overline{v}(\boldsymbol{\pi})  \; = \; \sum_{k=1}^K \omega_k \, \log \left( \sum_{j = 0}^J \exp \left\{  u_j(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}}) + \int_{\boldsymbol{\pi}'}\overline{v}(\boldsymbol{\pi}') \, \text{f}\left( \boldsymbol{\pi}' \mid \boldsymbol{\pi}, j\right) \operatorname{d}\boldsymbol{\pi}' \right\} \right) \label{eq:BE-evf}
+\end{gather}
+
+
 \noindent Note that the set of prior parameters $\boldsymbol{\pi}$ has $2 J$ components as we assume there is no correlated learning and as such we can characterize the entire prior distribution using the first two moments associated with each product's perceived match quality. However, only one element of all $2J$ elements evolves stochastically, which is the updated prior mean for the product chosen. The prior variance associated with that product decreases deterministically, and the prior moments of the remaining $J -1$ products remain unchanged. \\
 
-\noindent We can also characterize the conditional choice probabilities as a function of the state $(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}_t})$.
-$$
-    \Pr \left\{\text{Consumer chooses } j \, \middle| \, (\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}_t}) \right\} \; = \; \frac{\exp \left\{ v_j(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}_t})  \right\}}{\displaystyle \sum_{\ell = 0}^J \exp \left\{ v_\ell(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}_t})  \right\}}
-$$
+\noindent We can characterize the conditional choice probabilities as a function of the state $(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}_t})$ as a result of the distributional assumption.
+\begin{gather}
+    \Pr \left\{\text{Consumer chooses } j \, \middle| \, (\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}_t}) \right\} \; = \; \frac{\exp \left\{ v_j(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}_t})  \right\}}{\displaystyle \sum_{\ell = 0}^J \exp \left\{ v_\ell(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}_t})  \right\}} \label{eq:CCP}
+\end{gather}
+
+\noindent Based on the approach outlined by \citet{hartmann-viard-2008}, I compute the switching costs for a consumer from their previous choice $j_{-}$ to their current choice $j$ with current posterior beliefs $\boldsymbol{\pi}^\star$, initial prior $\boldsymbol{\pi}$ and price vector $\boldsymbol{\mathfrak{p}}_k$.
+\begin{gather}
+    c(\boldsymbol{\pi}^\star, \boldsymbol{\mathfrak{p}}_k) \; \equiv \; \left(v_j(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}^\star}) - v_{j_-}(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}^\star })\right) - \left(v_j(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}}) - v_{j_-}(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}})\right) \label{eq:cost}
+\end{gather}
 
 \subsection*{Numerical Approximations}
 We make use of Chebyshev interpolation and Gauss-Hermite quadrature to solve the Bellman equation in this assignment. First, given that the state variable $\boldsymbol{\pi}$ consists of $J$ means and $J$ variances (no correlation terms as we are ruling out correlated learning), we have $2J$ state variables. This implies that we can represent the expected value function through a system of $2J$-tensor product of Chebyshev polynomials with a given number of Chebyshev nodes and a specified degree of the polynomials used. If we use $K$ nodes
@@ -193,25 +209,134 @@ We make use of Chebyshev interpolation and Gauss-Hermite quadrature to solve the
 \noindent where we see that we now evaluate the expectation over the Chebyshev polynomials using Gauss-Hermite quadrature. \\
 
 \noindent The numerical approximations outlined above will expedite the value function iteration. At iteration $n$, the Chebyshev approximation coefficients $\boldsymbol{\theta}^{(n)}$ represent the optimal approximation of the expected value function $\overline{v}$. We can then evaluate each choice-specific value function as shown:
-\begin{align*}
-	v^{(n)}_j(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}_t}) \; \approx \; u_j(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}_t}) + \beta \sum_{k = 1}^K \theta_k^{(n)} \sum_{q = 1}^Q  \psi_{q}^{(j)} \, T_k (\boldsymbol{\pi}_{t+1, q} \, ; \, j)
-\end{align*}
+\begin{align}
+	v^{(n)}_j(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}}) \; \approx \; u_j(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}}) + \beta \sum_{k = 1}^K \theta_k^{(n)} \sum_{q = 1}^Q  \psi_{q}^{(j)} \, T_k (\boldsymbol{\pi}_{q}') \label{eq:csvf_num}
+\end{align}
 
 \noindent These can be used to update the expected value function in the subsequent iteration
-$$
-\overline{v}^{(n+1)}(\boldsymbol{\pi}) \; \longleftarrow \; \sum_{k=1}^K \omega_k \, \log \left(\sum_j \exp   v_j^{(n)}(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}})   \right)
-$$
+\begin{gather}
+\overline{v}^{(n+1)}(\boldsymbol{\pi}) \; \longleftarrow \; \sum_{k=1}^K \omega_k \, \log \left(\sum_j \exp   v_j^{(n)}(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}})   \right) \label{eq:logsumexp}
+\end{gather}
 We obtain the updated Chebyshev coefficient vector $\boldsymbol{\theta}^{(n+1)}$ based on the regression
-$$
-\boldsymbol{\theta}^{(n+1)} \; = \; \left(\boldsymbol{T}(\pi)' \,\boldsymbol{T}(\pi)\right)^{-1} \boldsymbol{T}(\pi)'\, \overline{v}^{(n+1)}(\boldsymbol{\pi})
-$$
-The updated expected value function $\overline{v}^{(n+1)}$ is represented as $v^{(n+1)}(\boldsymbol{\pi}) \equiv \boldsymbol{T}(\boldsymbol{\pi}) \boldsymbol{\theta}^{(n+1)}$.
+\begin{align}
+\boldsymbol{\theta}^{(n+1)} \; & = \; \left(\boldsymbol{T}(\boldsymbol{\pi})' \,\boldsymbol{T}(\boldsymbol{\pi})\right)^{-1} \boldsymbol{T}(\boldsymbol{\pi})'\, \overline{v}^{(n+1)}(\boldsymbol{\pi}) \; \equiv \; \widetilde{\boldsymbol{T}}(\boldsymbol{\pi})'  \overline{v}^{(n+1)}(\boldsymbol{\pi}) \label{eq:updated-theta}
+\end{align}
+The updated expected value function $\overline{v}^{(n+1)}$ is represented as $v^{(n+1)}(\boldsymbol{\pi}) \equiv \boldsymbol{T}(\boldsymbol{\pi}) \, \boldsymbol{\theta}^{(n+1)}$. We can rewrite the Bellman equation (Equation \ref{eq:BE-evf}) as it would be implemented using the Chebyshev polynomials and Gauss-Hermite quadrature:
+\begin{gather}
+    \boldsymbol{\theta}^{(n+1)}  \; \longleftarrow \; \widetilde{\boldsymbol{T}}(\boldsymbol{\pi})' \sum_{k=1}^K \omega_k \, \log \left(\sum_j \exp  \left\{ u_j(\mathbf{\boldsymbol{\mathfrak{p}}_k, \boldsymbol{\pi}}) + \beta  \sum_{q = 1}^Q  \psi_{q}^{(j)} \, \boldsymbol{T} (\boldsymbol{\pi}_{q}' ) \boldsymbol{\theta}^{(n)}   \right\}  \right) \label{eq:BE-num}
+\end{gather}
 
 \section{Computational Implementation}
 
+I created a \verb|Python| class called \verb|BayesianLearning| which included methods to compute choice specific value functions as in Equation \ref{eq:csvf_num}, generate expected value functions as fixed point solutions to the Bellman Equation \ref{eq:BE-num}, and simulate the trajectory of a consumer with a specific prior belief set who Bayesian-learns about their match quality over a specified time horizon. This uses methods from the accompanying classes \verb|ChebyshevApproximator| and \verb|GaussHermiteQuadrature| to implement these via the use of numerical approximations.\\
 
+\noindent Algorithm \ref{alg_csvf} shows the approach I used to compute the choice-specific value functions associated with $J + 1$ products (including the outside option) for $K$ different price vectors as a function of the consumer's current beliefs about their match qualities and the Chebyshev coefficient vector representing the current guess for the expected value function. In my code, I implement this in the class method \verb|get_choice_specific_vf()|.\\
+
+\noindent Algorithm \ref{alg_evf} implements the Value Function Iteration procedure used to obtain a fixed point solution to Equation \ref{eq:BE-evf}. This algorithm goes on until either the norm of the difference in Chebyshev coefficients from subsequent iterations is small enough or the iteration count has exceeded a specified maximum. This is implemented in class method \verb|get_expected_vf()|. \\
+
+\noindent Algorithm \ref{alg_bayes} simulates the learning pattern of a Bayesian consumer who chooses among a set of products to consume in each period over a time horizon. The method \verb|bayesian_learning()| inside the eponymous class returns a list of the products chosen, the conditional choice probabilities and switching costs in each time period.
+
+{
+\newpage
+\printbibliography}
+
+\newpage 
+
+\appendix
+\section{Pseudocode for Algorithms}
+This appendix lists the psuedocode for each algorithm used in the computational implemention of my Bayesian learning model.
+\vfill
+\begin{algorithm}[!htpb]
+	\caption{Generating the Choice-Specific Value Functions} \label{alg_csvf}
+    \vspace{1em} 
+	Takes a vector of prior mean parameters $\boldsymbol{\mu}$ (dimension $J$), prior variance matrix $\boldsymbol{\Sigma}$ (dimension $J \times J$), and Chebyshev coefficient vector $\boldsymbol{\theta}$ (dimension ${(N + 1)}^{2J}$) representing the expected value function in terms of the posterior mean and variance of each product. \vspace{1em} 
+    \begin{onehalfspace}
+	\begin{algorithmic}[1]
+	\Function{get\_choice\_specific\_vf}{{$\boldsymbol{\mu}, \boldsymbol{\Sigma}, \boldsymbol{\theta}$}}
+    \For{$k = 1, \dots, K$} \Comment{Evaluate for each possible price vector.}
+    \For{$j = 0, \dots, J$} \Comment{Evaluate CSVF for product $j$.}
+	\State $\boldsymbol{\xi}, \boldsymbol{\psi} \gets \; Q$ Gauss-Hermite quadrature nodes and weights from $\N\left(\mu_j, \Sigma_{jj} + \sigma_\nu^2\right)$.
+    \State $\widetilde{\boldsymbol{\mu}}^{(j)} \gets \; Q$ posterior means corresponding to signal vector $\boldsymbol{\xi}$ for product $j$ via Equation \ref{eq:bayes-mean}.
+    \State $\widetilde{\Sigma}_{jj} \gets $ Posterior variance for product $j$ via Equation \ref{eq:bayes-var}
+    \State $(\boldsymbol{\mu}_{\text{post}}, \boldsymbol{\Sigma}_{\text{post}} ) \gets $ $Q$ sets of posterior moments with those for products $j' \neq j$ unchanged.
+    \State $\boldsymbol{T}_j \gets $ Matrix ($Q \times {(N + 1)}^{2J}$) of Chebyshev polynomial coefficients representing posterior means and variances after product $j$ is chosen.
+    \State $\boldsymbol{E}_j \gets$ Vector (${(N + 1)}^{2J}$) containing the expected value of the Chebyshev polynomial coefficients using the GHQ weights, i.e. $\pi^{-0.5} \boldsymbol{\psi} ' \boldsymbol{T}_j$
+	\State $u_{jk} \gets $ Expected utility associated with product $j$ and price vector $k$, equal to $0$ for $j = 0$.
+	\State $v_{jk} \gets $ CSVF associated with product $j$ and price vector $k$, i.e. $u_{jk} + \beta \boldsymbol{E}_j \cdot \boldsymbol{\theta}$.
+    \EndFor
+    \EndFor
+	\\
+	\Return Choice-specific value function $\boldsymbol{v}$, matrix (dimension $J 
+    +1 \times K$) for $J + 1$ products corresponding to $K$ possible price vectors.
+    \EndFunction 
+	\end{algorithmic}
+    \end{onehalfspace}
+	\vspace{0.5em} 
+\end{algorithm}
+\vfill
 
 \newpage
-\printbibliography
+\null
+\vfill
+\begin{algorithm}[!htpb]
+	\caption{Computing the Expected Value Function} \label{alg_evf}
+    \vspace{1em} 
+	Takes a vector of prior mean parameters $\boldsymbol{\mu}$ (dimension $J$), prior variance matrix $\boldsymbol{\Sigma}$ (dimension $J \times J$), and an initial guess of a Chebyshev coefficient vector $\boldsymbol{\theta}_{\text{init}}$ (dimension ${(N + 1)}^{2J}$) for the expected value function. \vspace{1em} 
+    \begin{onehalfspace}
+	\begin{algorithmic}[1]
+	\Function{get\_expected\_vf}{$\boldsymbol{\mu}, \boldsymbol{\Sigma}, \boldsymbol{\theta}_{\text{init}}$}
+    \State $\boldsymbol{\Pi} \equiv \left\{ \boldsymbol{\mu}_{(m)}, \boldsymbol{\Sigma}_{(m)}\right\} \gets $ $M^{2J}$ Chebyshev nodes generated from the prior beliefs.
+    \State $\boldsymbol{\theta}_{0} \gets  \boldsymbol{\theta}_{\text{init}}$ 
+    \While{$ite < ite\_max$ and $error > tol$} \Comment{Exit conditions for the VFI.}
+	\For{$m = 1, \dots, M^{2J}$} \Comment{Apply to each set of Chebyshev node prior beliefs.}
+    \State $\boldsymbol{v}_{(m)} \gets $ \textsc{get\_choice\_specific\_vf} $\left( \boldsymbol{\mu}_{(m)}, \boldsymbol{\Sigma}_{(m)}, \boldsymbol{\theta}_{ite} \right)$ CSVF (dimension $(J + 1) \times K$) for node $m$ using Algorithm \ref{alg_csvf}.
+    \EndFor
+    \State $\overline{\boldsymbol{v}}_{ite + 1} \gets \{\boldsymbol{v}_{(m)}\}$ Obtain EVF (dimension $M^{2J}$) using Equation \ref{eq:logsumexp}.
+    \State $\boldsymbol{\theta}_{ite + 1} \gets $ Chebyshev coefficient vector (dimension ${(N + 1)}^{2J}$) from Equation \ref{eq:updated-theta}.
+    \State $error = \left\| \boldsymbol{\theta}_{ite+1} - \boldsymbol{\theta}_{ite} \right\|$ 
+    \State $ite = ite + 1$
+    \EndWhile
+    \State$\boldsymbol{\theta}^\star \gets \boldsymbol{\theta}_{ite+1}$	\\
+	\Return Vector $\boldsymbol{\theta}^\star$ of dimension ${(N + 1)}^{2J}$, the fixed-point solution to the Bellman Equation \ref{eq:BE-num} given the inputs.
+    \EndFunction 
+	\end{algorithmic}
+    \end{onehalfspace}
+	\vspace{0.5em} 
+\end{algorithm}
+\vfill
+
+\newpage
+\null
+\vfill
+\begin{algorithm}[!htpb]
+	\caption{Simulating the Bayesian Learning Experience of a Consumer} \label{alg_bayes}
+    \vspace{1em} 
+	Takes the consumer's actual match quality $\boldsymbol{\vartheta}$ and a simulated trajectory of prices $\boldsymbol{x}$ (of length $T$ with integer values from 1 to $K$, where $T$ is the time horizon over which the consumer's behavior is simulated and $K$ is the number of possible price vector realizations) as inputs. The class object is initialized with the prior mean $\boldsymbol{\mu}_{\text{init}}$ and variance $\boldsymbol{\Sigma}_{\text{init}}$ upon creation. \vspace{1em} 
+    \begin{onehalfspace}
+	\begin{algorithmic}[1]
+	\Function{bayesian\_learning}{$\boldsymbol{\mu}, \boldsymbol{\Sigma}, \boldsymbol{\theta}_{\text{init}}$}
+    \State $\boldsymbol{\theta}_0 \gets \boldsymbol{0}_{{(N + 1)}^{2J}}$ Initial guess for the expected value function.
+    \State $\boldsymbol{\mu}_{0} \gets \boldsymbol{\mu}_{\text{init}}$ and $\boldsymbol{\Sigma}_{0} \gets \boldsymbol{\Sigma}_{\text{init}}$.
+    \For{$t = 1, \dots, T$} \Comment{Span the time horizon.}
+    \State $price \gets price\_matrix[\boldsymbol{x}[t], :]$ Obtain prices for products at time $t$ based on simulated draws.
+    \State $\boldsymbol{\theta}_{t} \gets $ \textsc{get\_expected\_vf}$\left(\boldsymbol{\mu}_{t-1}, \boldsymbol{\Sigma}_{t-1}, \boldsymbol{\theta}_{t-1} \right)$ Compute the EVF based on the time-$t$ beliefs, using the previous time period's Chebyshev coefficients as an initial guess. 
+    \State $\boldsymbol{v} \gets $ \textsc{get\_choice\_specific\_vf} $\left( \boldsymbol{\mu}_{t-1}, \boldsymbol{\Sigma}_{t-1}, \boldsymbol{\theta}_{t} \right)$ Evaluate CSVF associatd with $price$.
+    \State $CCP[t] \gets $ Compute the conditional choice probabilities for the consumer at time $t$ using Equation \ref{eq:CCP}.
+    \State $\boldsymbol{\varepsilon} \gets $ Simulated $J$ i.i.d. draws from a T1EV distribution centered at $0$.  
+    \State $j^\star \gets \underset{j = 0, \dots, J}{\arg\max} \left(\boldsymbol{v} + \boldsymbol{\varepsilon} \right)_{j}$ Product choice corresponds to the maximum possible sum of the CSVF and the idiosyncratic preference shocks.
+    \If{$j^\star \neq 0$} A product is chosen and beliefs will be updated.
+        \State $\xi \gets $ Simulated signal realized by the consumer for product $j$ from $ \N(\vartheta_j, \tau^2_{j} + \sigma^2_\nu)$.
+        \State $\left( \boldsymbol{\mu}_t, \boldsymbol{\Sigma}_{t} \right) \gets $ Update beliefs for product $j^\star$ using Equations \ref{eq:bayes-mean} and \ref{eq:bayes-var} based on signal $\xi$.
+    \Else $\;\;$ The outside option is chosen and beliefs remain unchanged.
+        \State $\left( \boldsymbol{\mu}_t, \boldsymbol{\Sigma}_{t} \right) \gets \left( \boldsymbol{\mu}_{t-1}, \boldsymbol{\Sigma}_{t-1} \right)$
+    \EndIf
+    \EndFor \\
+	\Return Product choice vector (length $T$ with integer values from $0$ to $J$) and $CCP$ (matrix of size $T \times (J + 1)$) containing conditional choice probabilities at each time period.
+    \EndFunction 
+	\end{algorithmic}
+    \end{onehalfspace}
+	\vspace{0.5em} 
+\end{algorithm}
+\vfill
 
 \end{document}
